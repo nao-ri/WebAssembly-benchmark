@@ -7,6 +7,7 @@ textarea {
 }
 </style>
 <script src="imageGrayscale.js"></script>
+<script src="imageGrayscaleToRed.js"></script>
 <script id="js_code">
 function jsImageGrayscale(data, width, height) {
   for (var i = 0, il = width * height; i < il; i++) {
@@ -64,8 +65,8 @@ var moduleToRed, functionsToRed = {};
       wasmBinary: binary,
     }).then(result =>{
       moduleToRed = result;
-      functionsToRed.imageGrayscale =
-          module.cwrap('imageGrayscaleToRed',
+      functionsToRed.imageGrayscaleToRed =
+      moduleToRed.cwrap('imageGrayscaleToRed',
                        null,
                        ['number', 'number', 'number']);
         onReady();
@@ -170,7 +171,7 @@ function start() {
     var pointer = moduleToRed._malloc(array.length);
     var offset = pointer;
     moduleToRed.HEAPU8.set(array, offset);
-    functions.imageGrayscaleToRed(pointer, width, height);
+    functionsToRed.imageGrayscaleToRed(pointer, width, height);
     array.set(moduleToRed.HEAPU8.subarray(offset, offset + array.length));
     //add gray to red images wasm + using fetch function to preload the red wasm module
     

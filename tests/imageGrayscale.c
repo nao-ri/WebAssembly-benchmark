@@ -18,3 +18,4 @@ void imageGrayscale(unsigned char *data, int width, int height) {
 //     data[i*4+0] = R; data[i*4+1] =0; data[i*4+2] =0;
 //   }
 // }
+
