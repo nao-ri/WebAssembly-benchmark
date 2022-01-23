@@ -8,6 +8,9 @@ textarea {
 </style>
 <script src="imageGrayscale.js"></script>
 <script src="imageGrayscaleToRed.js"></script>
+<script src="imageGrayscalefunc2.js"></script>
+<script src="imageGrayscaleToRedSame.js"></script>
+<script src="imageGrayscaleToRedLink.js"></script>
 <script id="js_code">
 function jsImageGrayscale(data, width, height) {
   for (var i = 0, il = width * height; i < il; i++) {
@@ -18,11 +21,15 @@ function jsImageGrayscale(data, width, height) {
       (0.2126*r + 0.7152*g + 0.0722*b) | 0;
   }
 }
+
 </script>
 <script id="ws_instantiate_code">
 // wasm load
-var module, functions = {};
-var moduleToRed, functionsToRed = {};
+var module, functions = {}; //module0
+var moduleToRed, functionsToRed = {}; //module1
+var modulefunc2, functionsfunc2 = {}; //model2
+var moduleToRedSame, functionsToRedSame = {};//Module3
+var moduleToRedLink, functionsToRedLink = {};//Module4
 // fetch('imageGrayscale.wasm')
 //   .then(response => response.arrayBuffer())
 //   .then(buffer => new Uint8Array(buffer))
@@ -49,9 +56,7 @@ var moduleToRed, functionsToRed = {};
     }).then(result =>{
       module = result;
       functions.imageGrayscale =
-          module.cwrap('imageGrayscale',
-                       null,
-                       ['number', 'number', 'number']);
+          module.cwrap('imageGrayscale','number',['number', 'number', 'number']);
         //onReady();
     });
   });
@@ -61,13 +66,80 @@ var moduleToRed, functionsToRed = {};
   .then(response => response.arrayBuffer())
   .then(buffer => new Uint8Array(buffer))
   .then(binary => {
-    Module({
+    Module1({
       wasmBinary: binary,
     }).then(result =>{
       moduleToRed = result;
       functionsToRed.imageGrayscaleToRed =
       moduleToRed.cwrap('imageGrayscaleToRed',
                        null,
+                       ['number', 'number', 'number']);
+        //onReady();
+    });
+  });
+
+//add
+
+
+// fetch('imageGrayscalefunc2.wasm')
+//   .then(response => response.arrayBuffer())
+//   .then(buffer => new Uint8Array(buffer))
+//   .then(binary => {
+//     Module2({
+//       wasmBinary: binary,
+//     }).then(result =>{
+//       modulefunc2 = result;
+//       functionsfunc2.imageGrayscale =
+//       modulefunc2.cwrap('imageGrayscale',
+//                         null,
+//                       ['number', 'number', 'number']);
+//       functionsfunc2.imageGrayscaleToRed =
+//        modulefunc2.cwrap('imageGrayscaleToRed',
+//                         null,
+//                       ['number', 'number', 'number']);
+
+//      onReady();
+//     });
+//   });
+
+  fetch('imageGrayscalefunc2.wasm')
+  .then(response => response.arrayBuffer())
+  .then(buffer => new Uint8Array(buffer))
+  .then(binary => {
+    Module2({
+      wasmBinary: binary,
+    }).then(result =>{
+      modulefunc2 = result;
+      functionsfunc2.imageGrayscale =modulefunc2.cwrap('imageGrayscale',null,['number', 'number', 'number']);
+      functionsfunc2.imageGrayscaleToRed =modulefunc2.cwrap('imageGrayscaleToRed', null,['number', 'number', 'number']);
+     // onReady();
+    });
+  });
+
+  fetch('imageGrayscaleToRedSame.wasm')
+  .then(response => response.arrayBuffer())
+  .then(buffer => new Uint8Array(buffer))
+  .then(binary => {
+    Module3({
+      wasmBinary: binary,
+    }).then(result =>{
+      moduleToRedSame = result;
+      functionsToRedSame.imageGrayscaleToRedSame =moduleToRedSame.cwrap('imageGrayscaleToRedSame',null,['number', 'number', 'number']);
+      // functionsToRedSame.imageGrayscaleToRed =modulefunc2.cwrap('imageGrayscaleToRed', null,['number', 'number', 'number']);
+      //onReady();
+    });
+  });
+
+  fetch('imageGrayscaleToRedLink.wasm')
+  .then(response => response.arrayBuffer())
+  .then(buffer => new Uint8Array(buffer))
+  .then(binary => {
+    Module4({
+      wasmBinary: binary,
+    }).then(result =>{
+      moduleToRedLink = result;
+      functionsToRedLink.imageGrayscale =
+      moduleToRedLink.cwrap('imageGrayscale','number',
                        ['number', 'number', 'number']);
         onReady();
     });
@@ -86,11 +158,13 @@ function start() {
   var jsPerformance = document.getElementById('js_performance');
   var wsPerformance = document.getElementById('ws_performance');
   var wsPerformanceToRed = document.getElementById('ws_performanceToRed');//add
+  var wsPerformancesumtime = document.getElementById('ws_performancesumtime');//add
   var comparison = document.getElementById('comparison');
 
   jsPerformance.innerText = '';
   wsPerformance.innerText = '';
   wsPerformanceToRed.innerText = '';//add
+  wsPerformancesumtime.innerText = '';
   comparison.innerText = '';
 
   var canvas = document.createElement('canvas');
@@ -111,10 +185,19 @@ function start() {
   wsCanvas.height = height;
   var wsContext = wsCanvas.getContext('2d');
   var wsImageData = wsContext.getImageData(0, 0, width, height);
-
+ //add func2
+  var wsCanvasfunc2 = document.getElementById('ws_canvas_func2');
+  wsCanvasfunc2.width = width;
+  wsCanvasfunc2.height = height;
+  var wsContextfunc2 = wsCanvasfunc2.getContext('2d');
+  var wsImageDatafunc2 = wsContextfunc2.getImageData(0, 0, width, height);
+ 
   var array0 = imageData.data;
   var array1 = jsImageData.data;
+  // var array2 = wsImageData.data; //wsImageGrayscale array no data
   var array2 = wsImageData.data; //wsImageGrayscale array no data
+  var array3= wsImageDatafunc2.data
+  var array4=array0;
 
   function copyArray(src, res) {
     for (var i = 0, il = src.length; i < il; i++) {
@@ -135,16 +218,38 @@ function start() {
   function checkFunctionality() {
     copyArray(array0, array1);
     copyArray(array0, array2);
+    copyArray(array0, array3);
+    copyArray(array0, array4);
     jsImageGrayscale(array1, width, height);
     wsImageGrayscale(array2, width, height);
+    //wsImageGrayscaleToRed(array2, width, height);
+    //wsImageGrayscaleToRedSame(array2, width, height);
+    // wsImageGrayscalefunc2(array3, width, height);
+
+    wsImageGrayscaleToRedfunc2(array3, width, height);
+    // wsImageGrayscaleToRedSame(array3, width, height);
     jsContext.putImageData(jsImageData, 0, 0);
     wsContext.putImageData(wsImageData, 0, 0);
+    wsContextfunc2.putImageData(wsImageDatafunc2, 0, 0);
     //return equalArray(array1, array2);
     return true;
   }
 
   function run(func, array, width, height, loop) {
-    func(array, array.length); // warm-up
+    //func(array, array.length); // warm-up
+    var elapsedTime = 0.0;
+    for (var i = 0; i < loop; i++) {
+      array=array0;
+      var startTime = performance.now();
+      func(array, width, height);
+      var endTime = performance.now();
+      elapsedTime += (endTime - startTime);
+    }
+    return (elapsedTime / loop).toFixed(4);
+  }
+
+  function run2(func, array, width, height, loop) {
+    //func(array, array.length); // warm-up
     var elapsedTime = 0.0;
     for (var i = 0; i < loop; i++) {
       var startTime = performance.now();
@@ -154,16 +259,48 @@ function start() {
     }
     return (elapsedTime / loop).toFixed(4);
   }
+
+  function runTime2(func, array, width, height, loop) {
+    //func(array, array.length); // warm-up
+    var elapsedTime = 0.0;
+    for (var i = 0; i < loop; i++) {
+      array=array0;
+      var startTime = performance.now();
+      wsImageGrayscale(array, width, height);
+      wsImageGrayscaleToRed(array, width, height); 
+      var endTime = performance.now();
+      elapsedTime += (endTime - startTime);
+    }
+    return (elapsedTime / loop).toFixed(4);
+  }
+
+  function runTime2func2(func, array, width, height, loop) {
+    //func(array, array.length); // warm-up
+    var elapsedTime = 0.0;
+    for (var i = 0; i < loop; i++) {
+      array=array0;
+      var startTime = performance.now();
+      wsImageGrayscalefunc2(array, width, height);
+      wsImageGrayscaleToRedfunc2(array, width, height); 
+      var endTime = performance.now();
+      elapsedTime += (endTime - startTime);
+    }
+    return (elapsedTime / loop).toFixed(4);
+  }
+
 //add new wasm for benchmark
   function wsImageGrayscale(array, width, height) {
     var pointer = module._malloc(array.length);
     var offset = pointer;
     module.HEAPU8.set(array, offset);
+    //var rerutnfunc =functions.imageGrayscale(pointer, width, height);
+    //console.log(rerutnfunc);
     functions.imageGrayscale(pointer, width, height);
     array.set(module.HEAPU8.subarray(offset, offset + array.length));
     //add gray to red images wasm + using fetch function to preload the red wasm module
     
     module._free(pointer);
+    
   }
 
   //add
@@ -174,9 +311,57 @@ function start() {
     functionsToRed.imageGrayscaleToRed(pointer, width, height);
     array.set(moduleToRed.HEAPU8.subarray(offset, offset + array.length));
     //add gray to red images wasm + using fetch function to preload the red wasm module
-    
     moduleToRed._free(pointer);
   }
+
+  //add for func2
+  function wsImageGrayscalefunc2(array, width, height) {
+    var pointer = module._malloc(array.length);
+    var offset = pointer;
+    module.HEAPU8.set(array, offset);
+    // var func2log=functionsfunc2.imageGrayscale(pointer, width, height);
+    // console.log('func2 0:gray 1:red : %d', func2log);
+    functionsfunc2.imageGrayscale(pointer, width, height);
+    array.set(module.HEAPU8.subarray(offset, offset + array.length));
+    //add gray to red images wasm + using fetch function to preload the red wasm module
+    
+    module._free(pointer);
+  }
+
+  //add for func2
+  function wsImageGrayscaleToRedfunc2(array, width, height) {
+    var pointer = moduleToRed._malloc(array.length);
+    var offset = pointer;
+    moduleToRed.HEAPU8.set(array, offset);
+    // var func2log=functionsfunc2.imageGrayscaleToRed(pointer, width, height);
+    // console.log('func2 0:gray 1:red : %d', func2log);
+    functionsfunc2.imageGrayscaleToRed(pointer, width, height);
+    array.set(moduleToRed.HEAPU8.subarray(offset, offset + array.length));
+    //add gray to red images wasm + using fetch function to preload the red wasm module
+    moduleToRed._free(pointer);
+  }
+
+  function wsImageGrayscaleToRedSame(array, width, height) {
+    var pointer = module._malloc(array.length);
+    var offset = pointer;
+    module.HEAPU8.set(array, offset);
+    functionsToRedSame.imageGrayscaleToRedSame(pointer, width, height);
+    array.set(module.HEAPU8.subarray(offset, offset + array.length));
+    //add gray to red images wasm + using fetch function to preload the red wasm module
+    
+    module._free(pointer);
+  }
+
+  function wsImageGrayscaleToRedLink(array, width, height) {
+    var pointer = moduleToRedLink._malloc(array.length);
+    var offset = pointer;
+    moduleToRedLink.HEAPU8.set(array, offset);
+    functionsToRedLink.imageGrayscale(pointer, width, height);
+    array.set(moduleToRedLink.HEAPU8.subarray(offset, offset + array.length));
+    //add gray to red images wasm + using fetch function to preload the red wasm module
+    moduleToRedLink._free(pointer);
+  }
+
   // don't use Promise for the non Promise support browsers so far.
   setTimeout(function () {
     if (! checkFunctionality()) {
@@ -188,13 +373,26 @@ function start() {
     setTimeout(function () {
       jsPerformance.innerText = run(jsImageGrayscale, array1, width, height, loop);
       setTimeout(function () {
+        copyArray(array0, array2);
         wsPerformance.innerText = run(wsImageGrayscale, array2, width, height, loop);
-        wsPerformanceToRed.innerText = run(wsImageGrayscaleToRed, array2, width, height, loop);
-        comparison.innerText =
-          (Number(wsPerformanceToRed.innerText) /
-             Number(wsPerformance.innerText)).toFixed(4);
+        wsPerformanceToRed.innerText = run2(wsImageGrayscaleToRed, array2, width, height, loop);
+        // wsPerformancesumtime.innerText=  (Number(wsPerformance.innerText) + Number(wsPerformanceToRed.innerText)).toFixed(4);
+        wsPerformancesumtime.innerText=runTime2(wsImageGrayscale, array3, width, height, loop);
+        copyArray(array0, array3);
+        //runTime2(wsImageGrayscale, array3, width, height, loop);
+        comparison.innerText = runTime2func2(wsImageGrayscale, array3, width, height, loop);
+        copyArray(array0, array4);
+        var linktime = run(wsImageGrayscaleToRedLink, array4, width, height, loop);
+        //console.log(linktime);
         document.getElementById('message').innerText = 'Done';
         document.getElementById('run_button').disabled = false;
+        // console.log('2module-gray %s',  wsPerformancesumtime.innerText);
+        console.log('2module-gray: %s',  wsPerformance.innerText);
+        console.log('2module-red: %s',  wsPerformanceToRed.innerText);
+        console.log('2modele: %s',  wsPerformancesumtime.innerText);
+        console.log('1modele: %s', comparison.innerText);
+        console.log('1modele-Link-fucntion: %s', linktime);
+        console.log('----');
       });
       document.getElementById('message').innerText = 'Running WebAssembly';
     });
@@ -269,6 +467,7 @@ function switchDisplay(div) {
       JavaScript: <span id="js_performance"></span><br />
       WebAssembly1: <span id="ws_performance"></span><br />
       WebAssembly2: <span id="ws_performanceToRed"></span><br />
+      WA1+WA2suntime: <span id="ws_performancesumtime"></span><br />
       doubleWebAssembly: <span id="comparison"></span><br />
     </p>
   </div>
@@ -283,6 +482,8 @@ function switchDisplay(div) {
       <canvas id="js_canvas"></canvas><br />
       WebAssembly<br />
       <canvas id="ws_canvas"></canvas><br />
+      WebAssemblyfunc2<br />
+      <canvas id="ws_canvas_func2"></canvas><br />
     </span>
   </div>
   <div>
